@@ -1,6 +1,6 @@
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
 
 public class Main {
@@ -13,7 +13,6 @@ public class Main {
             boolean fileExists = file.exists();
             boolean isDirectory = file.isDirectory();
             double stringCount = 0;
-            ArrayList<String> list = new ArrayList<String>();
             if (!fileExists) {
                 System.out.println("Файл не существует");
             } else if (isDirectory) {
@@ -26,8 +25,8 @@ public class Main {
                      BufferedReader reader =
                              new BufferedReader(fileReader)) {
                     String line;
-                    double yandexCount=0;
-                    double googleCount=0;
+                    double yandexCount = 0;
+                    double googleCount = 0;
                     while ((line = reader.readLine()) != null) {
                         int length = line.length();
                         stringCount++;
@@ -42,12 +41,13 @@ public class Main {
                         String referrer = logs[10];
                         String userAgent = getUserAgent(logs);
                         String firstBracketsFromUserAgent = getFirstBracketsFromUserAgent(userAgent);
+                        //List<String> allBracketsFromUserAgent = getAllBracketsFromUserAgent(userAgent);
                         String botName = getBotNameFromUserAgentFirstBrackets(firstBracketsFromUserAgent);
                         if (botName.equals("YandexBot")) yandexCount++;
                         if (botName.equals("Googlebot")) googleCount++;
                     }
-                    System.out.println("YandexBot percentage: " + (yandexCount/stringCount)*100);
-                    System.out.println("Googlebot percentage: " + (googleCount/stringCount)*100);
+                    System.out.println("YandexBot percentage: " + (yandexCount / stringCount) * 100);
+                    System.out.println("Googlebot percentage: " + (googleCount / stringCount) * 100);
                 } catch (FileNotFoundException ex) {
                     ex.printStackTrace();
                 } catch (IOException ex) {
@@ -81,14 +81,32 @@ public class Main {
         return userAgent.substring(begin, end);
     }
 
+    public static List<String> getAllBracketsFromUserAgent(String userAgent) {
+        List<String> lst = new ArrayList<>();
+        int begin = 0;
+        int end = 0;
+        for (int i = 0; i < userAgent.length(); i++) {
+            if (userAgent.charAt(i) == '(') begin = i + 1;
+            if (userAgent.charAt(i) == ')') end = i;
+            if (begin != 0 && end != 0) {
+                System.out.println(userAgent);
+                lst.add(userAgent.substring(begin, end));
+                begin = 0;
+                end = 0;
+            }
+        }
+        System.out.println(lst);
+        return lst;
+    }
+
     public static String getBotNameFromUserAgentFirstBrackets(String firstBracketsFromUserAgent) {
         String[] parts = firstBracketsFromUserAgent.split(";");
-        String fragment="";
+        String fragment = "";
         if (parts.length >= 2) {
             fragment = parts[1];
         }
         String secondPart = fragment.replaceAll(" ", "");
-        if (secondPart.length()==0 || !secondPart.contains("/")) return "";
+        if (secondPart.length() == 0 || !secondPart.contains("/")) return "";
         String botName = "";
         int i = 0;
         while (secondPart.charAt(i) != '/') {
