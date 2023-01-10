@@ -31,7 +31,8 @@ public class Main {
                         int length = line.length();
                         stringCount++;
                         if (length > 1024) throw new TooLongStringException("string length more than 1024 symbols");
-
+                        LogEntry log = new LogEntry(line);
+                        System.out.println(log);
                         String[] logs = line.split(" ");
                         String ip = logs[0];
                         String requestDateTime = logs[3] + " " + logs[4];
