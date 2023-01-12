@@ -1,7 +1,8 @@
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -27,34 +28,29 @@ public class Main {
                     String line;
                     double yandexCount = 0;
                     double googleCount = 0;
+                    Statistics statistics = new Statistics();
                     while ((line = reader.readLine()) != null) {
                         int length = line.length();
                         stringCount++;
                         if (length > 1024) throw new TooLongStringException("string length more than 1024 symbols");
-                        LogEntry log = new LogEntry(line);
-                        System.out.println(log);
-                        String[] logs = line.split(" ");
-                        String ip = logs[0];
-                        String requestDateTime = logs[3] + " " + logs[4];
-                        String httpMethodAndPath = logs[5].substring(1) + " " + logs[6];
-                        String statusCode = logs[8];
-                        String dataAmount = logs[9];
-                        String referrer = logs[10];
-                        String userAgent = getUserAgent(logs);
-                        String firstBracketsFromUserAgent = getFirstBracketsFromUserAgent(userAgent);
+                        LogEntry logEntry = new LogEntry(line);
+                        //System.out.println(logEntry);
+                        statistics.addEntry(logEntry);
+                        //String firstBracketsFromUserAgent = getFirstBracketsFromUserAgent(logEntry.getUserAgent());
                         //List<String> allBracketsFromUserAgent = getAllBracketsFromUserAgent(userAgent);
-                        String botName = getBotNameFromUserAgentFirstBrackets(firstBracketsFromUserAgent);
-                        if (botName.equals("YandexBot")) yandexCount++;
-                        if (botName.equals("Googlebot")) googleCount++;
+                        //String botName = getBotNameFromUserAgentFirstBrackets(firstBracketsFromUserAgent);
+                        if (logEntry.getUserAgent().contains("YandexBot/")) yandexCount++;
+                        if (logEntry.getUserAgent().contains("Googlebot/")) googleCount++;
                     }
+                    System.out.println("Общее количество строк: " + stringCount);
                     System.out.println("YandexBot percentage: " + (yandexCount / stringCount) * 100);
                     System.out.println("Googlebot percentage: " + (googleCount / stringCount) * 100);
+                    System.out.println("Средний объём трафика сайта за час: " + statistics.getTrafficRate());
                 } catch (FileNotFoundException ex) {
                     ex.printStackTrace();
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
-                System.out.println("Общее количество строк: " + stringCount);
             }
         }
 
