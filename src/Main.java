@@ -46,6 +46,8 @@ public class Main {
                     System.out.println("YandexBot percentage: " + (yandexCount / stringCount) * 100);
                     System.out.println("Googlebot percentage: " + (googleCount / stringCount) * 100);
                     System.out.println("Средний объём трафика сайта за час: " + statistics.getTrafficRate());
+                    System.out.println("Доля для каждой операционной системы: " + statistics.geOsProportion());
+                    //System.out.println("Список всех существующих страниц сайта: " + statistics.getPaths());
                 } catch (FileNotFoundException ex) {
                     ex.printStackTrace();
                 } catch (IOException ex) {
