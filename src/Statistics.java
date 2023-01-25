@@ -10,54 +10,83 @@ public class Statistics {
     private LocalDateTime minTime;
     private LocalDateTime maxTime;
 
-    private HashSet<String> paths = new HashSet<>();
+    private HashSet<String> existingPages = new HashSet<>();
+
+    private HashSet<String> nonExistingPages = new HashSet<>();
 
     private HashMap<String, Integer> osFrequency = new HashMap<>();
 
-    public HashSet<String> getPaths() {
-        return paths;
+    private HashMap<String, Integer> browserFrequency = new HashMap<>();
+
+    public HashSet<String> getExistingPages() {
+        return existingPages;
+    }
+
+    public HashSet<String> getNonExistingPages() {
+        return nonExistingPages;
     }
 
     public Statistics() {
-        totalTraffic=0;
-        minTime=LocalDateTime.MAX;
-        maxTime=LocalDateTime.MIN;
+        totalTraffic = 0;
+        minTime = LocalDateTime.MAX;
+        maxTime = LocalDateTime.MIN;
     }
 
-    public void addEntry (LogEntry logEntry) {
+    public void addEntry(LogEntry logEntry) {
         UserAgent userAgent = new UserAgent(logEntry.getUserAgent());
         String os = userAgent.getOperatingSystem();
-        totalTraffic+= logEntry.getResponseSize();
+        String browser = userAgent.getBrowser();
+        totalTraffic += logEntry.getResponseSize();
         LocalDateTime logDateTime = logEntry.getRequestDateTime();
-        if (logDateTime.isBefore(minTime)) minTime=logDateTime;
-        if (logDateTime.isAfter(maxTime)) maxTime=logDateTime;
-        if (logEntry.getResponseCode()==200) paths.add(logEntry.getPath());
+        if (logDateTime.isBefore(minTime)) minTime = logDateTime;
+        if (logDateTime.isAfter(maxTime)) maxTime = logDateTime;
+        if (logEntry.getResponseCode() == 200) existingPages.add(logEntry.getPath());
+        if (logEntry.getResponseCode() == 404) nonExistingPages.add(logEntry.getPath());
         if (osFrequency.containsKey(os)) {
-            osFrequency.put(os,osFrequency.get(os)+1);
-        }
-        else osFrequency.put(os,1);
+            osFrequency.put(os, osFrequency.get(os) + 1);
+        } else osFrequency.put(os, 1);
+
+        if (browserFrequency.containsKey(browser)) {
+            browserFrequency.put(browser, browserFrequency.get(browser) + 1);
+        } else browserFrequency.put(browser, 1);
     }
 
-    public long getTrafficRate () {
+    public long getTrafficRate() {
         long hours = ChronoUnit.HOURS.between(minTime, maxTime);
-        System.out.println(osFrequency);
-        return totalTraffic/hours;
+        return totalTraffic / hours;
     }
 
-    public HashMap<String, Double> geOsProportion () {
+    public HashMap<String, Double> getOsProportion() {
         HashMap<String, Double> osProportion = new HashMap<>();
-        for(Map.Entry entry: osFrequency.entrySet()) {
-            double proportion = Double.parseDouble(entry.getValue().toString())/getOsCount();
-            osProportion.put(entry.getKey().toString(),proportion);
+        for (Map.Entry entry : osFrequency.entrySet()) {
+            double proportion = Double.parseDouble(entry.getValue().toString()) / getOsCount();
+            osProportion.put(entry.getKey().toString(), proportion);
         }
         return osProportion;
     }
 
-    private int getOsCount () {
+    public HashMap<String, Double> getBrowserProportion() {
+        HashMap<String, Double> browserProportion = new HashMap<>();
+        for (Map.Entry entry : browserFrequency.entrySet()) {
+            double proportion = Double.parseDouble(entry.getValue().toString()) / getBrowserCount();
+            browserProportion.put(entry.getKey().toString(), proportion);
+        }
+        return browserProportion;
+    }
+
+    private int getOsCount() {
         int osCount = 0;
-        for(Map.Entry entry: osFrequency.entrySet()) {
-            osCount+=(int)entry.getValue();
+        for (Map.Entry entry : osFrequency.entrySet()) {
+            osCount += (int) entry.getValue();
         }
         return osCount;
+    }
+
+    private int getBrowserCount() {
+        int browserCount = 0;
+        for (Map.Entry entry : browserFrequency.entrySet()) {
+            browserCount += (int) entry.getValue();
+        }
+        return browserCount;
     }
 }

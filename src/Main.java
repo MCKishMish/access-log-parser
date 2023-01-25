@@ -1,7 +1,4 @@
 import java.io.*;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
 import java.util.*;
 
 public class Main {
@@ -46,7 +43,8 @@ public class Main {
                     System.out.println("YandexBot percentage: " + (yandexCount / stringCount) * 100);
                     System.out.println("Googlebot percentage: " + (googleCount / stringCount) * 100);
                     System.out.println("Средний объём трафика сайта за час: " + statistics.getTrafficRate());
-                    System.out.println("Доля для каждой операционной системы: " + statistics.geOsProportion());
+                    System.out.println("Доля для каждой операционной системы: " + statistics.getOsProportion());
+                    System.out.println("Доля для каждого браузера: " + statistics.getBrowserProportion());
                     //System.out.println("Список всех существующих страниц сайта: " + statistics.getPaths());
                 } catch (FileNotFoundException ex) {
                     ex.printStackTrace();
