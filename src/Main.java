@@ -45,6 +45,9 @@ public class Main {
                     System.out.println("Средний объём трафика сайта за час: " + statistics.getTrafficRate());
                     System.out.println("Доля для каждой операционной системы: " + statistics.getOsProportion());
                     System.out.println("Доля для каждого браузера: " + statistics.getBrowserProportion());
+                    System.out.println("Среднее количество посещений сайта за час: " + statistics.getAverageVisitsNumberPerHour());
+                    System.out.println("Среднее количество ошибочных запросов в час: " + statistics.getAverageFailedRequestsNumberPerHour());
+                    System.out.println("Средняя посещаемость одним пользователем: " + statistics.getAverageAttendancePerUser());
                     //System.out.println("Список всех существующих страниц сайта: " + statistics.getPaths());
                 } catch (FileNotFoundException ex) {
                     ex.printStackTrace();

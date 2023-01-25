@@ -9,6 +9,8 @@ public class Statistics {
     private long totalTraffic;
     private LocalDateTime minTime;
     private LocalDateTime maxTime;
+    private double humanVisitsNumber;
+    private double errorResponseCount;
 
     private HashSet<String> existingPages = new HashSet<>();
 
@@ -17,6 +19,8 @@ public class Statistics {
     private HashMap<String, Integer> osFrequency = new HashMap<>();
 
     private HashMap<String, Integer> browserFrequency = new HashMap<>();
+
+    private HashMap<String, Integer> realPeopleIpCount = new HashMap<>();
 
     public HashSet<String> getExistingPages() {
         return existingPages;
@@ -30,13 +34,19 @@ public class Statistics {
         totalTraffic = 0;
         minTime = LocalDateTime.MAX;
         maxTime = LocalDateTime.MIN;
+        humanVisitsNumber = 0;
+        errorResponseCount = 0;
     }
 
     public void addEntry(LogEntry logEntry) {
         UserAgent userAgent = new UserAgent(logEntry.getUserAgent());
+        if (!UserAgent.isBot(logEntry.getUserAgent())) humanVisitsNumber++;
         String os = userAgent.getOperatingSystem();
         String browser = userAgent.getBrowser();
+        String ip = logEntry.getIpAddr();
         totalTraffic += logEntry.getResponseSize();
+        if (Integer.toString(logEntry.getResponseCode()).startsWith("4") || Integer.toString(logEntry.getResponseCode()).startsWith("5"))
+            errorResponseCount++;
         LocalDateTime logDateTime = logEntry.getRequestDateTime();
         if (logDateTime.isBefore(minTime)) minTime = logDateTime;
         if (logDateTime.isAfter(maxTime)) maxTime = logDateTime;
@@ -49,6 +59,9 @@ public class Statistics {
         if (browserFrequency.containsKey(browser)) {
             browserFrequency.put(browser, browserFrequency.get(browser) + 1);
         } else browserFrequency.put(browser, 1);
+        if (!UserAgent.isBot(logEntry.getUserAgent()) && realPeopleIpCount.containsKey(ip)) {
+            realPeopleIpCount.put(ip, realPeopleIpCount.get(ip) + 1);
+        } else if (!UserAgent.isBot(logEntry.getUserAgent())) realPeopleIpCount.put(ip, 1);
     }
 
     public long getTrafficRate() {
@@ -88,5 +101,19 @@ public class Statistics {
             browserCount += (int) entry.getValue();
         }
         return browserCount;
+    }
+
+    public double getAverageVisitsNumberPerHour() {
+        long hours = ChronoUnit.HOURS.between(minTime, maxTime);
+        return hours / humanVisitsNumber;
+    }
+
+    public double getAverageFailedRequestsNumberPerHour() {
+        long hours = ChronoUnit.HOURS.between(minTime, maxTime);
+        return hours / errorResponseCount;
+    }
+
+    public double getAverageAttendancePerUser () {
+        return humanVisitsNumber/realPeopleIpCount.size();
     }
 }
