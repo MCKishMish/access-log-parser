@@ -1,5 +1,8 @@
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -8,6 +11,8 @@ public class Statistics {
 
     private long totalTraffic;
     private LocalDateTime minTime;
+
+    private LocalDateTime lastSecond;
     private LocalDateTime maxTime;
     private double humanVisitsNumber;
     private double errorResponseCount;
@@ -22,6 +27,12 @@ public class Statistics {
 
     private HashMap<String, Integer> realPeopleIpCount = new HashMap<>();
 
+    private HashMap<Integer, Integer> pickAttendanceCount = new HashMap<>();
+
+    private int secondsSerialNumber;
+
+    private HashSet<String> referrers = new HashSet<>();
+
     public HashSet<String> getExistingPages() {
         return existingPages;
     }
@@ -30,20 +41,44 @@ public class Statistics {
         return nonExistingPages;
     }
 
+    public HashMap<Integer, Integer> getPickAttendanceCount() {
+        return pickAttendanceCount;
+    }
+
+    public HashSet<String> getReferrers() {
+        return referrers;
+    }
+
     public Statistics() {
         totalTraffic = 0;
         minTime = LocalDateTime.MAX;
         maxTime = LocalDateTime.MIN;
+        lastSecond = LocalDateTime.MIN;
         humanVisitsNumber = 0;
         errorResponseCount = 0;
+        secondsSerialNumber = 1;
     }
 
-    public void addEntry(LogEntry logEntry) {
+    public void addEntry(LogEntry logEntry) throws MalformedURLException {
         UserAgent userAgent = new UserAgent(logEntry.getUserAgent());
-        if (!UserAgent.isBot(logEntry.getUserAgent())) humanVisitsNumber++;
+        if (!UserAgent.isBot(logEntry.getUserAgent())) {
+            humanVisitsNumber++;
+            if (lastSecond != LocalDateTime.MIN && ChronoUnit.SECONDS.between(lastSecond, logEntry.getRequestDateTime()) == 0) {
+                pickAttendanceCount.put(secondsSerialNumber, pickAttendanceCount.get(secondsSerialNumber) + 1);
+                lastSecond = logEntry.getRequestDateTime();
+            } else if (pickAttendanceCount.isEmpty()) {
+                pickAttendanceCount.put(secondsSerialNumber, 1);
+                lastSecond = logEntry.getRequestDateTime();
+            } else {
+                secondsSerialNumber++;
+                pickAttendanceCount.put(secondsSerialNumber, 1);
+                lastSecond = logEntry.getRequestDateTime();
+            }
+        }
         String os = userAgent.getOperatingSystem();
         String browser = userAgent.getBrowser();
         String ip = logEntry.getIpAddr();
+        String referer = logEntry.getReferer();
         totalTraffic += logEntry.getResponseSize();
         if (Integer.toString(logEntry.getResponseCode()).startsWith("4") || Integer.toString(logEntry.getResponseCode()).startsWith("5"))
             errorResponseCount++;
@@ -62,6 +97,11 @@ public class Statistics {
         if (!UserAgent.isBot(logEntry.getUserAgent()) && realPeopleIpCount.containsKey(ip)) {
             realPeopleIpCount.put(ip, realPeopleIpCount.get(ip) + 1);
         } else if (!UserAgent.isBot(logEntry.getUserAgent())) realPeopleIpCount.put(ip, 1);
+        if (referer != null && !referer.equals("\"-\"")) {
+            int begin = referer.indexOf('/', referer.indexOf('/')+1);
+            int end = referer.indexOf('/', begin+1);
+            referrers.add(referer.substring(begin+1, end));
+        }
     }
 
     public long getTrafficRate() {
@@ -113,7 +153,15 @@ public class Statistics {
         return hours / errorResponseCount;
     }
 
-    public double getAverageAttendancePerUser () {
-        return humanVisitsNumber/realPeopleIpCount.size();
+    public double getAverageAttendancePerUser() {
+        return humanVisitsNumber / realPeopleIpCount.size();
+    }
+
+    public int getPickAttendanceInSomeSecond() {
+        return pickAttendanceCount.values().stream().max(Comparator.naturalOrder()).get();
+    }
+
+    public int getMaxAttendanceByOneUser () {
+        return realPeopleIpCount.values().stream().max(Comparator.naturalOrder()).get();
     }
 }
